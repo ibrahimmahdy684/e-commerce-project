@@ -1,6 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+import {CategoryRouter} from "./routers/CategoryRouter.js";
+
+//routers
+app.use("/categories", CategoryRouter);
 
 dotenv.config();
 
