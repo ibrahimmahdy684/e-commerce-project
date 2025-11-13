@@ -1,32 +1,38 @@
 /**
- * Calculate points discount
- * 100 points = 1 pound discount
+ * Helper Utilities
+ * Reusable calculation and validation functions
+ */
+
+/**
+ * Calculate points discount (100 points = 1 pound)
  */
 const calculatePointsDiscount = (pointsToUse) => {
   return pointsToUse / 100;
 };
 
 /**
- * Calculate points earned from purchase
- * 1 pound spent = 1 point earned
+ * Calculate points earned (1 pound = 1 point)
  */
 const calculatePointsEarned = (finalAmount) => {
   return Math.floor(finalAmount);
 };
 
 /**
- * Validate points usage
+ * Validate points usage - Fail Fast approach
  */
 const validatePointsUsage = (pointsToUse, availablePoints, cartTotal) => {
+  // Fail fast on negative points
   if (pointsToUse < 0) {
     throw new Error('Points cannot be negative');
   }
 
+  // Fail fast on insufficient points
   if (pointsToUse > availablePoints) {
-    throw new Error('Insufficient points balance');
+    throw new Error(`Insufficient points. You have ${availablePoints} points available`);
   }
 
-  const maxPointsAllowed = cartTotal * 100; // Can't use more points than cart value
+  // Fail fast on exceeding cart value
+  const maxPointsAllowed = cartTotal * 100;
   if (pointsToUse > maxPointsAllowed) {
     throw new Error(`Cannot use more than ${maxPointsAllowed} points for this purchase`);
   }
