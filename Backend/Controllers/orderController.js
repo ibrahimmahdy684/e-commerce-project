@@ -11,7 +11,7 @@ const {
 /**
  * @desc    Create order from cart (Checkout)
  * @route   POST /api/orders
- * @access  Private (Buyer)
+ * @access  Private (user)
  */
 const createOrder = async (req, res, next) => {
   try {
@@ -132,7 +132,7 @@ const createOrder = async (req, res, next) => {
 /**
  * @desc    Get user's order history
  * @route   GET /api/orders
- * @access  Private (Buyer)
+ * @access  Private (user)
  */
 const getUserOrders = async (req, res, next) => {
   try {
@@ -194,8 +194,8 @@ const getOrderDetails = async (req, res, next) => {
       return ResponseHandler.notFound(res, 'Order');
     }
 
-    // Fail fast - authorization check for buyers
-    if (req.user.role === 'buyer' && order.user_id._id.toString() !== req.user._id.toString()) {
+    // Fail fast - authorization check for users
+    if (req.user.role === 'user' && order.user_id._id.toString() !== req.user._id.toString()) {
       return ResponseHandler.forbidden(res, 'Not authorized to view this order');
     }
 

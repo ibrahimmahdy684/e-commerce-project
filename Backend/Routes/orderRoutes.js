@@ -19,12 +19,12 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 // Apply authentication to all routes
 router.use(protect);
 
-// Buyer Routes
+// user Routes
 // @route   POST /api/orders
-router.post('/', authorize('buyer'), createOrder);
+router.post('/', authorize('user'), createOrder);
 
 // @route   GET /api/orders
-router.get('/', authorize('buyer'), getUserOrders);
+router.get('/', authorize('user'), getUserOrders);
 
 // Shared Routes
 // @route   GET /api/orders/:order_id
