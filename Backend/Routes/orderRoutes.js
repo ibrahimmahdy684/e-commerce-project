@@ -32,6 +32,7 @@ router.get('/:order_id', getOrderDetails);
 
 // Vendor/Admin Routes
 // @route   PUT /api/orders/:order_id/status
+// + user -------------------------------------------------------------------------------------------
 router.put('/:order_id/status', authorize('vendor', 'admin'), updateOrderStatus);
 
 // Admin Only Routes
