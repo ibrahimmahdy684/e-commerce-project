@@ -11,12 +11,12 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 /**
  * Cart Routes
- * All routes require authentication and buyer role
+ * All routes require authentication and user role
  */
 
 // Apply authentication and authorization to all cart routes
 router.use(protect);
-router.use(authorize('buyer'));
+router.use(authorize('user'));
 
 // @route   GET /api/cart
 router.get('/', getCart);
