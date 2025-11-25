@@ -1,7 +1,7 @@
-import express from "express";
-import productController from "../Controllers/productController.js";
-import { protect } from "../middlewares/authMiddleware.js";
-import allowRoles from "../middlewares/roleMiddleware.js";
+const express=require("express");
+const productController =require( "../Controllers/productController.js");
+const { protect } =require("../middlewares/authMiddleware.js");
+const allowRoles =require("../middlewares/roleMiddleware.js");
 
 const router = express.Router();
 

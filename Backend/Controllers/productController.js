@@ -1,4 +1,4 @@
-import Product from "../Models/productModel.js"; 
+const Product =require("../Models/productModel.js"); 
 
 const productController={
 
