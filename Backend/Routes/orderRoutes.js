@@ -7,7 +7,8 @@ const {
   updateOrderStatus,
   getAllOrders,
   getStatistics,
-  getSalesReport
+  getSalesReport,
+  cancelOrder
 } = require('../Controllers/orderController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -25,6 +26,9 @@ router.post('/', authorize('user'), createOrder);
 
 // @route   GET /api/orders
 router.get('/', authorize('user'), getUserOrders);
+
+// @route   DELETE /api/orders/:order_id/cancel
+router.delete('/:order_id/cancel', authorize('user'), cancelOrder);
 
 // Shared Routes
 // @route   GET /api/orders/:order_id
