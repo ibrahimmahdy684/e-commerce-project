@@ -5,6 +5,7 @@ const connectDB = require("./config/dbConnect");
 const CategoryRouter = require("./Routes/CategoryRouter.js");
 const orderRoutes = require("./Routes/orderRoutes");
 const cartRoutes = require("./Routes/cartRoutes");
+const productRoutes=require("./Routes/productRoutes");
 //routers
 
 dotenv.config();
@@ -16,6 +17,7 @@ const app = express();
 app.use("/categories", CategoryRouter);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/product",productRoutes);
 
 app.use(cors());
 app.use(express.json());
