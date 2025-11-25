@@ -3,7 +3,8 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/dbConnect");
 const CategoryRouter = require("./Routes/CategoryRouter.js");
-
+const orderRoutes = require("./Routes/orderRoutes");
+const cartRoutes = require("./Routes/cartRoutes");
 //routers
 
 dotenv.config();
@@ -13,6 +14,8 @@ connectDB();
 
 const app = express();
 app.use("/categories", CategoryRouter);
+app.use("/api/orders", orderRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.use(cors());
 app.use(express.json());
