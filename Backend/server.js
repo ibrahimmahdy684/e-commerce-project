@@ -1,11 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const connectDB = require("./config/dbConnect");
 const CategoryRouter = require("./Routes/CategoryRouter.js");
 
 //routers
 
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 app.use("/categories", CategoryRouter);
