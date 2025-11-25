@@ -11,7 +11,7 @@ const {
 /**
  * @desc    Create order from cart (Checkout)
  * @route   POST /api/orders
- * @access  Private (Buyer)
+ * @access  Private (user)
  */
 const createOrder = async (req, res, next) => {
   try {
@@ -132,7 +132,7 @@ const createOrder = async (req, res, next) => {
 /**
  * @desc    Get user's order history
  * @route   GET /api/orders
- * @access  Private (Buyer)
+ * @access  Private (user)
  */
 const getUserOrders = async (req, res, next) => {
   try {
@@ -194,8 +194,8 @@ const getOrderDetails = async (req, res, next) => {
       return ResponseHandler.notFound(res, 'Order');
     }
 
-    // Fail fast - authorization check for buyers
-    if (req.user.role === 'buyer' && order.user_id._id.toString() !== req.user._id.toString()) {
+    // Fail fast - authorization check for users
+    if (req.user.role === 'user' && order.user_id._id.toString() !== req.user._id.toString()) {
       return ResponseHandler.forbidden(res, 'Not authorized to view this order');
     }
 
@@ -396,6 +396,81 @@ const getSalesReport = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Cancel a pending order and refund products & points
+ * @route   DELETE /api/orders/:order_id/cancel
+ * @access  Private (user)
+ */
+const cancelOrder = async (req, res, next) => {
+  try {
+    const { order_id } = req.params;
+
+    const order = await Order.findById(order_id)
+      .populate({
+        path: 'cart_id',
+        populate: {
+          path: 'item_list.product_id'
+        }
+      })
+      .populate('user_id');
+
+    // Fail fast - order not found
+    if (!order) {
+      return ResponseHandler.notFound(res, 'Order');
+    }
+
+    // Fail fast - authorization check
+    if (order.user_id._id.toString() !== req.user._id.toString()) {
+      return ResponseHandler.forbidden(res, 'Not authorized to cancel this order');
+    }
+
+    // Fail fast - order status check
+    if (order.status !== 'pending') {
+      return ResponseHandler.error(
+        res,
+        `Cannot cancel order with status '${order.status}'. Only pending orders can be cancelled.`,
+        400
+      );
+    }
+
+    // Restore product quantities
+    const cart = order.cart_id;
+    if (cart && cart.item_list) {
+      for (const item of cart.item_list) {
+        await Product.findByIdAndUpdate(
+          item.product_id._id,
+          { $inc: { quantity: item.quantity } }
+        );
+      }
+    }
+
+    // Calculate points refund (reverse the points calculation from order creation)
+    const orderCalculation = calculateOrderTotal(order.total_amount, 0);
+    const user = order.user_id;
+    const refundedPoints = orderCalculation.pointsEarned;
+
+    // Restore user points
+    await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { points: refundedPoints } }
+    );
+
+    // Update order status to cancelled
+    order.status = 'cancelled';
+    await order.save();
+
+    return ResponseHandler.success(res, {
+      order_id: order._id,
+      status: order.status,
+      refunded_amount: order.total_amount,
+      refunded_points: refundedPoints,
+      message: 'Order cancelled successfully. Products and points have been refunded.'
+    }, 'Order cancelled successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
@@ -403,7 +478,8 @@ module.exports = {
   updateOrderStatus,
   getAllOrders,
   getStatistics,
-  getSalesReport
+  getSalesReport,
+  cancelOrder
 };
 
 

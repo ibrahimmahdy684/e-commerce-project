@@ -1,7 +1,8 @@
-import {Category} from "../Models/categoryModel.js";
-import {Product} from "../Models/productModel.js";
 
-export const getAllCategories = async (req, res) => {
+const  Category = require('../Models/CategoryModel');
+const Product = require('../Models/ProductModel');
+
+ const getAllCategories = async (req, res) => {
 
     try {
         const categories = await Category.find({});
@@ -13,7 +14,7 @@ export const getAllCategories = async (req, res) => {
         res.status(500).json({message: "Error fetching categories", error: e.message});
     }};
 
-export const createCategory = async (req, res) => {
+ const createCategory = async (req, res) => {
     try {
         const {name, description} = req.body;
         if (!name || name.trim() === "") {
@@ -27,7 +28,7 @@ export const createCategory = async (req, res) => {
     }};
 
 //  PUT update a category by ID (admin only)
-export const updateCategory = async (req,res) => {
+ const updateCategory = async (req,res) => {
     try {
         const { id } = req.params;
          const updated = await Category.findByIdAndUpdate(id, req.body, { new: true });
@@ -42,7 +43,7 @@ export const updateCategory = async (req,res) => {
 //delete caqtegory by ID (admin only)
 //but we check that there are no products linked to this category
 
-export const deleteCategory = async (req, res) => {
+ const deleteCategory = async (req, res) => {
     try {
         const {id} = req.params;
         const category = await Category.findById(id);
@@ -64,7 +65,7 @@ if (!deleted) {
 
     //get category by id
 
-export const getCategoryById = async (req,res)=> {
+ const getCategoryById = async (req,res)=> {
     try {
         const {id} = req.params;
         const category = await Category.findById(id);
@@ -76,6 +77,13 @@ export const getCategoryById = async (req,res)=> {
         res.status(500).json({message: "Error fetching category", error: e.message});
     }};
 
+module.exports = {
+    getAllCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    getCategoryById
+}
 
 
 
