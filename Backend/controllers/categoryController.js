@@ -14,6 +14,7 @@ const Product = require('../Models/ProductModel');
         res.status(500).json({message: "Error fetching categories", error: e.message});
     }};
 
+    //admin only 
  const createCategory = async (req, res) => {
     try {
         const {name, description} = req.body;
