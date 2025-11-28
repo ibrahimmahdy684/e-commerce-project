@@ -1,11 +1,11 @@
-const express=require("express");
-const productController =require( "../Controllers/productController.js");
-const { protect } =require("../middlewares/authMiddleware.js");
-const allowRoles =require("../middlewares/roleMiddleware.js");
-
+const express = require("express");
 const router = express.Router();
 
-// Create a product (only vendors)
+const productController = require("../Controllers/productController.js");
+const protect = require("../Middleware/authMiddleware.js");
+const allowRoles = require("../Middleware/roleMiddleware.js");
+
+// Create a product (vendor only)
 router.post(
   "/",
   protect,
@@ -13,20 +13,19 @@ router.post(
   productController.createProduct
 );
 
-// Get all products approved or not (admin) 
+// Get all products (admin only)
 router.get(
-  "/all", 
+  "/all",
   protect,
-  allowRoles("admin"), 
+  allowRoles("admin"),
   productController.getAllProducts
 );
 
 // Get only approved products (public)
-router.get("/approved", productController.getApprovedProducts)
+router.get("/approved", productController.getApprovedProducts);
 
-// Get product by ID  (public)
+// Get product by ID (public)
 router.get("/:id", productController.getProductById);
-
 
 // Update product (vendor + admin)
 router.put(
@@ -36,12 +35,12 @@ router.put(
   productController.updateProduct
 );
 
-// Delete product (admin only)
+// Delete product (admin OR vendor)
 router.delete(
   "/:id",
   protect,
-  allowRoles("admin","vendor"),
+  allowRoles("admin", "vendor"),
   productController.deleteProduct
 );
 
-export default router;
+module.exports = router;
