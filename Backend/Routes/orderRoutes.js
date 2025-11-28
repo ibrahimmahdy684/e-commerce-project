@@ -1,5 +1,8 @@
-const express = require('express');
+// routes/orderRoutes.js
+
+const express = require("express");
 const router = express.Router();
+
 const {
   createOrder,
   getUserOrders,
@@ -8,46 +11,29 @@ const {
   getAllOrders,
   getStatistics,
   getSalesReport,
-  cancelOrder
-} = require('../Controllers/orderController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+  cancelOrder,
+} = require("../Controllers/orderController");
 
-/**
- * Order Routes
- * Mixed access levels based on role
- */
+const protect = require("../Middleware/authMiddleware.js");
+const allowRoles = require("../Middleware/roleMiddleware.js");
 
 // Apply authentication to all routes
 router.use(protect);
 
-// user Routes
-// @route   POST /api/orders
-router.post('/', authorize('user'), createOrder);
+// USER ROUTES
+router.post("/", allowRoles("user"), createOrder);
+router.get("/", allowRoles("user"), getUserOrders);
+router.delete("/:order_id/cancel", allowRoles("user"), cancelOrder);
 
-// @route   GET /api/orders
-router.get('/', authorize('user'), getUserOrders);
+// SHARED ROUTES
+router.get("/:order_id", getOrderDetails);
 
-// @route   DELETE /api/orders/:order_id/cancel
-router.delete('/:order_id/cancel', authorize('user'), cancelOrder);
+// VENDOR + ADMIN
+router.put("/:order_id/status", allowRoles("vendor", "admin"), updateOrderStatus);
 
-// Shared Routes
-// @route   GET /api/orders/:order_id
-router.get('/:order_id', getOrderDetails);
-
-// Vendor/Admin Routes
-// @route   PUT /api/orders/:order_id/status
-// + user -------------------------------------------------------------------------------------------
-router.put('/:order_id/status', authorize('vendor', 'admin'), updateOrderStatus);
-
-// Admin Only Routes
-// @route   GET /api/admin/orders
-router.get('/admin/orders', authorize('admin'), getAllOrders);
-
-// @route   GET /api/admin/statistics
-router.get('/admin/statistics', authorize('admin'), getStatistics);
-
-// @route   GET /api/admin/sales-report
-router.get('/admin/sales-report', authorize('admin'), getSalesReport);
+// ADMIN ONLY ROUTES
+router.get("/admin/orders", allowRoles("admin"), getAllOrders);
+router.get("/admin/statistics", allowRoles("admin"), getStatistics);
+router.get("/admin/sales-report", allowRoles("admin"), getSalesReport);
 
 module.exports = router;
-

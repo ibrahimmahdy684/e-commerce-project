@@ -1,10 +1,8 @@
-import User from "../models/userModel.js";
+import User from "../Models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 
-// ===========================
-// 1. Generate JWT
 
 export const generateToken = (user) => {
   return jwt.sign(
@@ -17,29 +15,26 @@ export const generateToken = (user) => {
   );
 };
 
-// ===========================
-// 2. Hash Password
 
 export const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);
 };
 
-// ===========================
 // 3. Compare Password
 
 export const comparePassword = async (password, hashed) => {
   return await bcrypt.compare(password, hashed);
 };
 
-// ===========================
+
 // 4. Generate OTP
 
 export const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000); // 6 digits
 };
 
-// ===========================
+
 // 5. Email Transporter
 
 const transporter = nodemailer.createTransport({
@@ -50,7 +45,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ===========================
 // 6. Send Verification Email
 
 export const sendVerificationEmail = async (email, otp) => {
@@ -66,7 +60,6 @@ export const sendVerificationEmail = async (email, otp) => {
   });
 };
 
-// ===========================
 // 7. Send Welcome Email
 
 export const sendWelcomeEmail = async (email, name) => {
@@ -81,7 +74,7 @@ export const sendWelcomeEmail = async (email, name) => {
   });
 };
 
-// =====================================
+
 // 8. REGISTER USER (with OTP)
 
 export const registerUser = async (req, res) => {
