@@ -6,6 +6,8 @@ const CategoryRouter = require("./Routes/CategoryRouter.js");
 const orderRoutes = require("./Routes/orderRoutes");
 const cartRoutes = require("./Routes/cartRoutes");
 const productRoutes=require("./Routes/productRoutes");
+const authRoutes = require("./Routes/authRoutes");
+
 const userRoutes=require("./Routes/userRoutes");
 //routers
 
@@ -15,10 +17,15 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+app.use(cors());
+app.use(express.json());
+
 app.use("/categories", CategoryRouter);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/product",productRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 
 app.use(cors());
