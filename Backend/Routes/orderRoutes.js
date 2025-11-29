@@ -10,7 +10,7 @@ const {
   getSalesReport,
   cancelOrder
 } = require('../Controllers/orderController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../Middleware/authMiddleware');
 
 /**
  * Order Routes

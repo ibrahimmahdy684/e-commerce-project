@@ -1,5 +1,6 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
+// Address sub-schema
 const addressSchema = new mongoose.Schema({
   street: { type: String },
   city: { type: String },
@@ -8,6 +9,7 @@ const addressSchema = new mongoose.Schema({
   description: { type: String },
 });
 
+// User schema
 const userSchema = new mongoose.Schema({
   role: {
     type: String,
@@ -48,7 +50,7 @@ const userSchema = new mongoose.Schema({
   // Vendor-only attributes
   shop_name: {
     type: String,
-    required: false, // only required if role === "vendor"
+    required: false,
   },
 
   vendor_status: {
@@ -57,10 +59,27 @@ const userSchema = new mongoose.Schema({
     default: 'not-approved',
   },
 
+  
+  otp: {
+    type: String,
+  },
+
+  otpExpires: {
+    type: Date,
+  },
+
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+
+  
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-export default mongoose.model('User', userSchema);
+
+const User = mongoose.model("User", userSchema);
+module.exports = User;
