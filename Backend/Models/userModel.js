@@ -13,9 +13,9 @@ const addressSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   role: {
     type: String,
-    enum: ['user', 'vendor', 'admin'],
+    enum: ["user", "vendor", "admin"],
     required: true,
-    default: 'user',
+    default: "user",
   },
 
   name: {
@@ -47,7 +47,6 @@ const userSchema = new mongoose.Schema({
 
   address: addressSchema,
 
-  // Vendor-only attributes
   shop_name: {
     type: String,
     required: false,
@@ -55,8 +54,8 @@ const userSchema = new mongoose.Schema({
 
   vendor_status: {
     type: String,
-    enum: ['approved', 'not-approved'],
-    default: 'not-approved',
+    enum: ["approved", "not-approved"],
+    default: "not-approved",
   },
 
   

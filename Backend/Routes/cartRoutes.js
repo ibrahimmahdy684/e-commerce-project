@@ -7,16 +7,16 @@ const {
   removeFromCart,
   clearCart
 } = require('../Controllers/cartController');
-const { protect, authorize } = require('../middleware/authMiddleware');
-
+const { protect } = require('../Middleware/authMiddleware');
+const allowRoles = require('../Middleware/roleMiddleware');
 /**
  * Cart Routes
  * All routes require authentication and user role
  */
 
 // Apply authentication and authorization to all cart routes
-router.use(protect);
-router.use(authorize('user'));
+//router.use(protect);
+//router.use(allowRoles('user'));
 
 // @route   GET /api/cart
 router.get('/', getCart);

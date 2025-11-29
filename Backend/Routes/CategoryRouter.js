@@ -1,17 +1,27 @@
-
-const {getAllCategories, getCategoryById, createCategory, updateCategory,deleteCategory} = require("../Controllers/CategoryController");
 const express = require("express");
 const router = express.Router();
-//import middleware for auth and admin check
 
-//public
+const {
+  getAllCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory
+} = require("../Controllers/CategoryController");
+
+// FIXED: correct import
+const protect = require("../Middleware/authMiddleware.js");
+
+// correct import for role middleware
+const allowRoles = require("../Middleware/roleMiddleware.js");
+
+// Public routes
 router.get("/", getAllCategories);
 router.get("/:id", getCategoryById);
 
-// //admin only
-// router.post('/','MIDDLEWARE_FOR_AUTH_AND_ADMIN_CHECK', createCategory);
-// router.put('/:id','MIDDLEWARE_FOR_AUTH_AND_ADMIN_CHECK', updateCategory);
-// router.delete('/:id','MIDDLEWARE_FOR_AUTH_AND_ADMIN_CHECK', deleteCategory);
-
+// Admin-only routes
+router.post("/", protect, allowRoles("admin"), createCategory);
+router.put("/:id", protect, allowRoles("admin"), updateCategory);
+router.delete("/:id", protect, allowRoles("admin"), deleteCategory);
 
 module.exports = router;

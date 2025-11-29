@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 
 
+
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
