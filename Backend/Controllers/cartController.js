@@ -9,6 +9,10 @@ const ResponseHandler = require('../utils/responseHandler');
  */
 const getCart = async (req, res, next) => {
   try {
+    // Defensive: ensure authentication middleware set req.user
+    if (!req.user) {
+      return ResponseHandler.unauthorized(res, 'Authentication required');
+    }
     let cart = await Cart.findOne({ user_id: req.user._id })
       .populate({
         path: 'item_list.product_id',
@@ -64,6 +68,10 @@ const getCart = async (req, res, next) => {
  */
 const addToCart = async (req, res, next) => {
   try {
+    // Defensive: ensure authentication middleware set req.user
+    if (!req.user) {
+      return ResponseHandler.unauthorized(res, 'Authentication required');
+    }
     const { product_id, quantity } = req.body;
 
     // Fail fast - validation
@@ -127,6 +135,10 @@ const addToCart = async (req, res, next) => {
  */
 const updateCartItem = async (req, res, next) => {
   try {
+    // Defensive: ensure authentication middleware set req.user
+    if (!req.user) {
+      return ResponseHandler.unauthorized(res, 'Authentication required');
+    }
     const { item_id } = req.params;
     const { quantity } = req.body;
 
@@ -183,6 +195,10 @@ const updateCartItem = async (req, res, next) => {
  */
 const removeFromCart = async (req, res, next) => {
   try {
+    // Defensive: ensure authentication middleware set req.user
+    if (!req.user) {
+      return ResponseHandler.unauthorized(res, 'Authentication required');
+    }
     const { item_id } = req.params;
 
     const cart = await Cart.findOne({ user_id: req.user._id });
@@ -207,6 +223,10 @@ const removeFromCart = async (req, res, next) => {
  */
 const clearCart = async (req, res, next) => {
   try {
+    // Defensive: ensure authentication middleware set req.user
+    if (!req.user) {
+      return ResponseHandler.unauthorized(res, 'Authentication required');
+    }
     const cart = await Cart.findOne({ user_id: req.user._id });
 
     // Fail fast - cart not found
