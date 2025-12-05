@@ -1,0 +1,21 @@
+Index: Backend/.env
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>PORT=5000\r\n\r\n\r\n# MongoDB (replace with your own)\r\nMONGO_URI=mongodb+srv://ecommercedb:ecommerce1234@cluster0.dghlvui.mongodb.net/\r\n\r\n\r\n# JWT\r\nJWT_SECRET=1234\r\n\r\n# Email\r\nEMAIL_USER=noreply.ecommerrcegiu@gmail.com\r\nEMAIL_PASS=GIU@123456
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Backend/.env b/Backend/.env
+--- a/Backend/.env	(revision cae199ca6cc0ed0978209ba9cd95ddb8a736b422)
++++ b/Backend/.env	(date 1764672479191)
+@@ -2,8 +2,9 @@
+ 
+ 
+ # MongoDB (replace with your own)
+-MONGO_URI=mongodb+srv://ecommercedb:ecommerce1234@cluster0.dghlvui.mongodb.net/
++#MONGO_URI=mongodb+srv://ecommercedb:ecommerce1234@cluster0.dghlvui.mongodb.net/
+ 
++MONGO_URI=mongodb://localhost:27017/e-com
+ 
+ # JWT
+ JWT_SECRET=1234
