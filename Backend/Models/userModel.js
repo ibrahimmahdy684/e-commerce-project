@@ -45,7 +45,10 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
 
-  address: addressSchema,
+  // Allow address to be either a simple string or an embedded document
+  address: {
+    type: mongoose.Schema.Types.Mixed,
+  },
 
   shop_name: {
     type: String,

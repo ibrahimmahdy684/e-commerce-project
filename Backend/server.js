@@ -1,17 +1,16 @@
+// Load environment variables FIRST before any other imports
+const dotenv = require("dotenv");
+dotenv.config();
+
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const connectDB = require("./config/dbConnect");
 const CategoryRouter = require("./Routes/CategoryRouter.js");
 const orderRoutes = require("./Routes/orderRoutes");
 const cartRoutes = require("./Routes/cartRoutes");
 const productRoutes=require("./Routes/productRoutes");
 const authRoutes = require("./Routes/authRoutes");
-
 const userRoutes=require("./Routes/userRoutes");
-//routers
-
-dotenv.config();
 
 // Connect to MongoDB
 connectDB();

@@ -16,9 +16,9 @@ const getCart = async (req, res, next) => {
     let cart = await Cart.findOne({ user_id: req.user._id })
       .populate({
         path: 'item_list.product_id',
-        select: 'name price quantity images status vendor_id',
+        select: 'name price quantity status vendorId',
         populate: {
-          path: 'vendor_id',
+          path: 'vendorId',
           select: 'shop_name'
         }
       });
@@ -44,8 +44,7 @@ const getCart = async (req, res, next) => {
           quantity: item.quantity,
           available_quantity: item.product_id.quantity,
           subtotal,
-          image: item.product_id.images[0] || null,
-          vendor_name: item.product_id.vendor_id?.shop_name || 'Unknown',
+          vendor_name: item.product_id.vendorId?.shop_name || 'Unknown',
           status: item.product_id.status
         };
       });

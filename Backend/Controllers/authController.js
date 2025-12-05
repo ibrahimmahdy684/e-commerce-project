@@ -1,7 +1,11 @@
 const User = require("../Models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
+const {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+} = require("../utils/mailer");
 
 
 
@@ -30,49 +34,19 @@ const generateOTP = () => {
 };
 
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-
-const sendVerificationEmail = async (email, otp) => {
-  await transporter.sendMail({
-    from: `"E-commerce Store" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Email Verification",
-    html: `
-      <h2>Email Verification</h2>
-      <p>Your OTP code is: <b>${otp}</b></p>
-      <p>This code is valid for 10 minutes.</p>
-    `,
-  });
-};
-
-
-const sendWelcomeEmail = async (email, name) => {
-  await transporter.sendMail({
-    from: `"E-commerce Store" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Welcome!",
-    html: `
-      <h2>Welcome, ${name}!</h2>
-      <p>Your account has been successfully activated.</p>
-    `,
-  });
-};
-
-
 const registerUser = async (req, res) => {
   try {
+    console.log("📝 Register request received");
+    console.log("Request body:", req.body);
+
     const { name, email, password, role, phone, address } = req.body;
 
+    console.log("Checking for existing user:", email);
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
+      console.log("User already exists:", email);
       return res.status(400).json({ message: "Email already exists" });
+    }
 
     const hashed = await hashPassword(password);
 
@@ -91,11 +65,29 @@ const registerUser = async (req, res) => {
     user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendVerificationEmail(email, otp);
+    // Try to send verification email, but don't fail registration if email fails
+    let emailSent = true;
+    try {
+      await sendVerificationEmail(email, otp);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError.message);
+      emailSent = false;
+    }
 
-    res.status(201).json({ message: "User registered. Check email for OTP." });
+    const message = emailSent
+      ? "User registered. Check email for OTP."
+      : "User registered, but email could not be sent. Please contact support for OTP.";
+
+    console.log("✅ Registration successful:", { email, emailSent });
+    res.status(201).json({
+      message,
+      emailSent,
+      ...(process.env.NODE_ENV === "development" && !emailSent ? { otp } : {})
+    });
 
   } catch (e) {
+    console.error("❌ Registration error:", e);
+    console.error("Error stack:", e.stack);
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
@@ -119,7 +111,12 @@ const verifyRegistration = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    await sendWelcomeEmail(user.email, user.name);
+    // Try to send welcome email, but don't fail verification if email fails
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError.message);
+    }
 
     res.status(200).json({ message: "Account verified successfully" });
 
@@ -172,9 +169,24 @@ const forgotPassword = async (req, res) => {
     user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendVerificationEmail(email, otp);
+    // Try to send password reset email, but don't fail if email fails
+    let emailSent = true;
+    try {
+      await sendPasswordResetEmail(email, otp);
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError.message);
+      emailSent = false;
+    }
 
-    res.status(200).json({ message: "OTP sent to your email" });
+    const message = emailSent
+      ? "OTP sent to your email"
+      : "OTP generated, but email could not be sent. Please contact support.";
+
+    res.status(200).json({
+      message,
+      emailSent,
+      ...(process.env.NODE_ENV === "development" && !emailSent ? { otp } : {})
+    });
 
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });

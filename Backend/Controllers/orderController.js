@@ -96,10 +96,19 @@ const createOrder = async (req, res, next) => {
     const newPointsBalance = user.points - orderCalculation.pointsUsed + orderCalculation.pointsEarned;
     await User.findByIdAndUpdate(req.user._id, { points: newPointsBalance });
 
+    // Create snapshot of cart items for order
+    const orderItems = cart.item_list.map(item => ({
+      product_id: item.product_id._id,
+      product_name: item.product_id.name,
+      price: item.product_id.price,
+      quantity: item.quantity
+    }));
+
     // Create order
     const order = await Order.create({
       user_id: req.user._id,
       cart_id: cart._id,
+      items: orderItems,
       total_amount: orderCalculation.finalAmount,
       payment_method,
       status: 'pending'
@@ -176,18 +185,8 @@ const getOrderDetails = async (req, res, next) => {
     const { order_id } = req.params;
 
     const order = await Order.findById(order_id)
-      .populate('user_id', 'full_name email phone address')
-      .populate({
-        path: 'cart_id',
-        populate: {
-          path: 'item_list.product_id',
-          select: 'name price images vendor_id',
-          populate: {
-            path: 'vendor_id',
-            select: 'shop_name'
-          }
-        }
-      });
+      .populate('user_id', 'name email phone address')
+      .populate('items.product_id', 'name price vendorId');
 
     // Fail fast - order not found
     if (!order) {
@@ -259,7 +258,7 @@ const getAllOrders = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const orders = await Order.find(query)
-      .populate('user_id', 'full_name email phone')
+      .populate('user_id', 'name email phone')
       .sort({ placed_at: -1 })
       .limit(parseInt(limit))
       .skip(skip);
@@ -307,7 +306,7 @@ const getStatistics = async (req, res, next) => {
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ]),
       Order.find()
-        .populate('user_id', 'full_name email')
+        .populate('user_id', 'name email')
         .sort({ placed_at: -1 })
         .limit(10)
     ]);
@@ -345,7 +344,7 @@ const getSalesReport = async (req, res, next) => {
       if (end_date) query.placed_at.$lte = new Date(end_date);
     }
 
-    const orders = await Order.find(query).populate('user_id', 'full_name email');
+    const orders = await Order.find(query).populate('user_id', 'name email');
 
     // Declarative calculations using reduce
     const totalSales = orders.reduce((sum, order) => sum + order.total_amount, 0);
@@ -406,12 +405,6 @@ const cancelOrder = async (req, res, next) => {
     const { order_id } = req.params;
 
     const order = await Order.findById(order_id)
-      .populate({
-        path: 'cart_id',
-        populate: {
-          path: 'item_list.product_id'
-        }
-      })
       .populate('user_id');
 
     // Fail fast - order not found
@@ -434,11 +427,10 @@ const cancelOrder = async (req, res, next) => {
     }
 
     // Restore product quantities
-    const cart = order.cart_id;
-    if (cart && cart.item_list) {
-      for (const item of cart.item_list) {
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
         await Product.findByIdAndUpdate(
-          item.product_id._id,
+          item.product_id,
           { $inc: { quantity: item.quantity } }
         );
       }
