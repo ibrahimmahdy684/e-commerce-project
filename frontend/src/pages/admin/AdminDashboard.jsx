@@ -24,7 +24,8 @@ const AdminDashboard = () => {
 
     try {
       const response = await adminAPI.getStatistics();
-      setStatistics(response.data);
+      // Response structure: { success, message, data: statisticsObject }
+      setStatistics(response.data?.data || response.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load statistics');
     } finally {
@@ -39,7 +40,8 @@ const AdminDashboard = () => {
       if (dateRange.end_date) params.end_date = dateRange.end_date;
 
       const response = await adminAPI.getSalesReport(params);
-      setSalesReport(response.data);
+      // Response structure: { success, message, data: salesReportObject }
+      setSalesReport(response.data?.data || response.data);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to load sales report');
     }
@@ -54,24 +56,20 @@ const AdminDashboard = () => {
 
       <div className="dashboard-stats">
         <div className="stat-card">
-          <h3>Total Users</h3>
-          <p className="stat-number">{statistics?.totalUsers || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>Total Vendors</h3>
-          <p className="stat-number">{statistics?.totalVendors || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>Total Products</h3>
-          <p className="stat-number">{statistics?.totalProducts || 0}</p>
-        </div>
-        <div className="stat-card">
           <h3>Total Orders</h3>
-          <p className="stat-number">{statistics?.totalOrders || 0}</p>
+          <p className="stat-number">{statistics?.total_orders || 0}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Pending Orders</h3>
+          <p className="stat-number">{statistics?.pending_orders || 0}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Completed Orders</h3>
+          <p className="stat-number">{statistics?.completed_orders || 0}</p>
         </div>
         <div className="stat-card">
           <h3>Total Revenue</h3>
-          <p className="stat-number">${statistics?.totalRevenue?.toFixed(2) || '0.00'}</p>
+          <p className="stat-number">${statistics?.total_revenue?.toFixed(2) || '0.00'}</p>
         </div>
       </div>
 
@@ -98,9 +96,10 @@ const AdminDashboard = () => {
         {salesReport && (
           <div className="sales-report-data">
             <h3>Sales Report Results</h3>
-            <p><strong>Total Sales:</strong> ${salesReport.totalSales?.toFixed(2) || '0.00'}</p>
-            <p><strong>Total Orders:</strong> {salesReport.totalOrders || 0}</p>
-            <p><strong>Average Order Value:</strong> ${salesReport.averageOrderValue?.toFixed(2) || '0.00'}</p>
+            <p><strong>Period:</strong> {salesReport.period?.start} to {salesReport.period?.end}</p>
+            <p><strong>Total Sales:</strong> ${salesReport.summary?.total_sales?.toFixed(2) || '0.00'}</p>
+            <p><strong>Total Orders:</strong> {salesReport.summary?.total_orders || 0}</p>
+            <p><strong>Average Order Value:</strong> ${salesReport.summary?.average_order_value?.toFixed(2) || '0.00'}</p>
           </div>
         )}
       </div>

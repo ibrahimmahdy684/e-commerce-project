@@ -243,8 +243,29 @@ const updateOrderStatus = async (req, res, next) => {
 };
 
 /**
+ * @desc    Get orders based on user role (Smart routing)
+ * @route   GET /api/orders
+ * @access  Private (User/Admin/Vendor)
+ * @info    Returns user's orders for 'user' role, all orders for 'admin' role, vendor-specific orders for 'vendor' role
+ */
+const getOrdersBasedOnRole = async (req, res, next) => {
+  try {
+    // Route to appropriate handler based on user role
+    if (req.user.role === 'admin') {
+      return getAllOrders(req, res, next);
+    } else if (req.user.role === 'vendor') {
+      return getVendorOrders(req, res, next);
+    } else {
+      return getUserOrders(req, res, next);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Get all orders (Admin)
- * @route   GET /api/admin/orders
+ * @route   GET /api/orders (when role=admin)
  * @access  Private (Admin)
  */
 const getAllOrders = async (req, res, next) => {
@@ -280,8 +301,81 @@ const getAllOrders = async (req, res, next) => {
 };
 
 /**
- * @desc    Get platform statistics
- * @route   GET /api/admin/statistics
+ * @desc    Get vendor orders (only orders containing vendor's products)
+ * @route   GET /api/orders (when role=vendor)
+ * @access  Private (Vendor)
+ */
+const getVendorOrders = async (req, res, next) => {
+  try {
+    const vendorId = req.user._id;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    // Get all vendor's products
+    const vendorProducts = await Product.find({ vendorId }).select('_id');
+    const vendorProductIds = vendorProducts.map(p => p._id.toString());
+
+    // Build base query
+    const query = {};
+    if (status) query.status = status;
+
+    const skip = (page - 1) * limit;
+
+    // Find all orders matching the base query
+    const allOrders = await Order.find(query)
+      .populate('user_id', 'name email phone')
+      .populate('items.product_id', 'vendorId')
+      .sort({ placed_at: -1 });
+
+    // Filter orders that contain vendor's products
+    const vendorOrders = allOrders.filter(order =>
+      order.items.some(item =>
+        item.product_id && item.product_id.vendorId &&
+        item.product_id.vendorId.toString() === vendorId.toString()
+      )
+    );
+
+    // Apply pagination to filtered results
+    const total = vendorOrders.length;
+    const paginatedOrders = vendorOrders.slice(skip, skip + parseInt(limit));
+
+    return ResponseHandler.success(res, {
+      orders: paginatedOrders,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    }, 'Vendor orders retrieved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get statistics based on user role (Smart routing)
+ * @route   GET /api/orders/statistics
+ * @access  Private (Admin/Vendor)
+ * @info    Returns all statistics for 'admin', vendor-specific for 'vendor'
+ */
+const getStatisticsBasedOnRole = async (req, res, next) => {
+  try {
+    // Route to appropriate handler based on user role
+    if (req.user.role === 'admin') {
+      return getStatistics(req, res, next);
+    } else if (req.user.role === 'vendor') {
+      return getVendorStatistics(req, res, next);
+    } else {
+      return ResponseHandler.forbidden(res, 'Access to statistics not allowed for this role');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get platform statistics (Admin)
+ * @route   GET /api/orders/statistics (when role=admin)
  * @access  Private (Admin)
  */
 const getStatistics = async (req, res, next) => {
@@ -327,8 +421,94 @@ const getStatistics = async (req, res, next) => {
 };
 
 /**
- * @desc    Get sales report
- * @route   GET /api/admin/sales-report
+ * @desc    Get vendor statistics (only their products)
+ * @route   GET /api/orders/statistics (when role=vendor)
+ * @access  Private (Vendor)
+ */
+const getVendorStatistics = async (req, res, next) => {
+  try {
+    const vendorId = req.user._id;
+
+    // Get all vendor's products
+    const vendorProducts = await Product.find({ vendorId }).select('_id');
+    const vendorProductIds = vendorProducts.map(p => p._id.toString());
+
+    // Find orders containing vendor's products
+    const allOrders = await Order.find()
+      .populate('items.product_id', 'vendorId');
+
+    // Filter orders that have at least one vendor product
+    const ordersWithVendorProducts = allOrders.filter(order =>
+      order.items.some(item =>
+        item.product_id && item.product_id.vendorId &&
+        item.product_id.vendorId.toString() === vendorId.toString()
+      )
+    );
+
+    // Calculate revenue from vendor's products only
+    let totalRevenue = 0;
+    let totalProductsSold = 0;
+    const ordersByStatus = {};
+
+    ordersWithVendorProducts.forEach(order => {
+      if (order.status !== 'cancelled') {
+        // Count only vendor's products in each order
+        order.items.forEach(item => {
+          if (item.product_id && item.product_id.vendorId &&
+              item.product_id.vendorId.toString() === vendorId.toString()) {
+            totalRevenue += item.price * item.quantity;
+            totalProductsSold += item.quantity;
+          }
+        });
+      }
+
+      // Track orders by status
+      ordersByStatus[order.status] = (ordersByStatus[order.status] || 0) + 1;
+    });
+
+    const pendingOrders = ordersByStatus.pending || 0;
+    const completedOrders = ordersByStatus.delivered || 0;
+
+    return ResponseHandler.success(res, {
+      total_orders: ordersWithVendorProducts.length,
+      pending_orders: pendingOrders,
+      completed_orders: completedOrders,
+      total_revenue: totalRevenue,
+      total_products_sold: totalProductsSold,
+      orders_by_status: Object.entries(ordersByStatus).map(([status, count]) => ({
+        _id: status,
+        count
+      }))
+    }, 'Vendor statistics retrieved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get sales report based on user role (Smart routing)
+ * @route   GET /api/orders/sales-report
+ * @access  Private (Admin/Vendor)
+ * @info    Returns all sales for 'admin', vendor-specific for 'vendor'
+ */
+const getSalesReportBasedOnRole = async (req, res, next) => {
+  try {
+    // Route to appropriate handler based on user role
+    if (req.user.role === 'admin') {
+      return getSalesReport(req, res, next);
+    } else if (req.user.role === 'vendor') {
+      return getVendorSalesReport(req, res, next);
+    } else {
+      return ResponseHandler.forbidden(res, 'Access to sales reports not allowed for this role');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get sales report (Admin)
+ * @route   GET /api/orders/sales-report (when role=admin)
  * @access  Private (Admin)
  */
 const getSalesReport = async (req, res, next) => {
@@ -390,6 +570,111 @@ const getSalesReport = async (req, res, next) => {
       sales_by_payment_method: salesByPaymentMethod,
       daily_sales: dailySales
     }, 'Sales report generated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get vendor sales report (only their products)
+ * @route   GET /api/orders/sales-report (when role=vendor)
+ * @access  Private (Vendor)
+ */
+const getVendorSalesReport = async (req, res, next) => {
+  try {
+    const vendorId = req.user._id;
+    const { start_date, end_date } = req.query;
+
+    const query = { status: { $ne: 'cancelled' } };
+
+    // Build date query
+    if (start_date || end_date) {
+      query.placed_at = {};
+      if (start_date) query.placed_at.$gte = new Date(start_date);
+      if (end_date) query.placed_at.$lte = new Date(end_date);
+    }
+
+    // Find all orders in the date range
+    const orders = await Order.find(query)
+      .populate('items.product_id', 'vendorId')
+      .populate('user_id', 'name email');
+
+    // Filter and calculate sales for vendor's products only
+    let totalSales = 0;
+    let totalOrders = 0;
+    let totalProductsSold = 0;
+    const salesByPaymentMethod = {};
+    const dailySalesMap = {};
+
+    orders.forEach(order => {
+      let vendorSalesInOrder = 0;
+      let hasVendorProduct = false;
+
+      // Calculate sales from vendor's products in this order
+      order.items.forEach(item => {
+        if (item.product_id && item.product_id.vendorId &&
+            item.product_id.vendorId.toString() === vendorId.toString()) {
+          const itemTotal = item.price * item.quantity;
+          vendorSalesInOrder += itemTotal;
+          totalProductsSold += item.quantity;
+          hasVendorProduct = true;
+        }
+      });
+
+      if (hasVendorProduct) {
+        totalSales += vendorSalesInOrder;
+        totalOrders++;
+
+        // Track by payment method
+        if (!salesByPaymentMethod[order.payment_method]) {
+          salesByPaymentMethod[order.payment_method] = { count: 0, total: 0 };
+        }
+        salesByPaymentMethod[order.payment_method].count++;
+        salesByPaymentMethod[order.payment_method].total += vendorSalesInOrder;
+
+        // Track daily sales
+        if (start_date && end_date) {
+          const dateKey = order.placed_at.toISOString().split('T')[0];
+          if (!dailySalesMap[dateKey]) {
+            dailySalesMap[dateKey] = { count: 0, total: 0 };
+          }
+          dailySalesMap[dateKey].count++;
+          dailySalesMap[dateKey].total += vendorSalesInOrder;
+        }
+      }
+    });
+
+    const averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+    // Convert maps to arrays
+    const salesByPaymentMethodArray = Object.entries(salesByPaymentMethod).map(([method, data]) => ({
+      _id: method,
+      count: data.count,
+      total: data.total
+    }));
+
+    const dailySales = Object.entries(dailySalesMap)
+      .map(([date, data]) => ({
+        _id: date,
+        count: data.count,
+        total: data.total
+      }))
+      .sort((a, b) => a._id.localeCompare(b._id));
+
+    return ResponseHandler.success(res, {
+      period: {
+        start: start_date || 'all time',
+        end: end_date || 'present'
+      },
+      summary: {
+        total_orders: totalOrders,
+        total_sales: totalSales,
+        average_order_value: averageOrderValue,
+        total_products_sold: totalProductsSold
+      },
+      sales_by_payment_method: salesByPaymentMethodArray,
+      daily_sales: dailySales
+    }, 'Vendor sales report generated successfully');
   } catch (error) {
     next(error);
   }
@@ -469,8 +754,14 @@ module.exports = {
   getOrderDetails,
   updateOrderStatus,
   getAllOrders,
+  getVendorOrders,
+  getOrdersBasedOnRole,
   getStatistics,
+  getStatisticsBasedOnRole,
+  getVendorStatistics,
   getSalesReport,
+  getSalesReportBasedOnRole,
+  getVendorSalesReport,
   cancelOrder
 };
 

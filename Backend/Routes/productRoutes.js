@@ -13,11 +13,11 @@ router.post(
   productController.createProduct
 );
 
-// Get all products (admin only)
+// Get all products (admin gets all, vendor gets only their own)
 router.get(
   "/all",
   protect,
-  allowRoles("admin"),
+  allowRoles("admin", "vendor"),
   productController.getAllProducts
 );
 

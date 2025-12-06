@@ -28,10 +28,10 @@ const VendorProducts = () => {
     setError('');
 
     try {
-      const [profileRes, categoriesRes, approvedProductsRes] = await Promise.all([
+      const [profileRes, categoriesRes, productsRes] = await Promise.all([
         vendorAPI.getProfile(),
         categoryAPI.getAll(),
-        productAPI.getApproved()
+        productAPI.getAll() // Now gets all vendor's products (pending, approved, rejected)
       ]);
 
       const vendorData = profileRes.data.data || profileRes.data;
@@ -40,14 +40,9 @@ const VendorProducts = () => {
       const categoriesData = categoriesRes.data.data || categoriesRes.data;
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
 
-      // Filter products by this vendor
-      const productsData = approvedProductsRes.data.data || approvedProductsRes.data;
-      const allProducts = Array.isArray(productsData) ? productsData : [];
-      const vendorProducts = allProducts.filter(
-        p => p.vendorId === vendorData._id || p.vendorId?._id === vendorData._id
-      );
-
-      setProducts(vendorProducts);
+      // Backend now filters products by vendor automatically
+      const productsData = Array.isArray(productsRes.data) ? productsRes.data : (productsRes.data?.data || []);
+      setProducts(productsData);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load data');
     } finally {

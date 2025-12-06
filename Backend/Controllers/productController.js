@@ -14,7 +14,13 @@ const productController={
 
  getAllProducts :async (req, res) => {
   try {
-    const products = await Product.find()
+    // Smart routing: filter by vendor if user is a vendor
+    const query = {};
+    if (req.user && req.user.role === 'vendor') {
+      query.vendorId = req.user._id;
+    }
+
+    const products = await Product.find(query)
     .populate("vendorId").populate("categoryId");
 
     res.status(200).json(products);

@@ -26,7 +26,9 @@ const AdminOrders = () => {
 
     try {
       const response = await adminAPI.getAllOrders(filters);
-      setOrders(response.data.orders || response.data);
+      // Response structure: { success, message, data: { orders, pagination } }
+      const ordersData = response.data?.data?.orders || response.data?.orders || [];
+      setOrders(ordersData);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load orders');
     } finally {
@@ -37,8 +39,10 @@ const AdminOrders = () => {
   const viewOrderDetails = async (orderId) => {
     try {
       const response = await orderAPI.getOrderDetails(orderId);
-      setSelectedOrder(response.data);
-      setNewStatus(response.data.status);
+      // Response structure: { success, message, data: orderObject }
+      const orderData = response.data?.data || response.data;
+      setSelectedOrder(orderData);
+      setNewStatus(orderData.status);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to load order details');
     }
@@ -101,11 +105,10 @@ const AdminOrders = () => {
 
             <div className="order-info">
               <p><strong>Order ID:</strong> {selectedOrder._id}</p>
-              <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-              <p><strong>Customer:</strong> {selectedOrder.userId?.name || selectedOrder.userId}</p>
-              <p><strong>Email:</strong> {selectedOrder.userId?.email || 'N/A'}</p>
+              <p><strong>Date:</strong> {new Date(selectedOrder.placed_at || selectedOrder.createdAt).toLocaleString()}</p>
+              <p><strong>Customer:</strong> {selectedOrder.user_id?.name || selectedOrder.user_id}</p>
+              <p><strong>Email:</strong> {selectedOrder.user_id?.email || 'N/A'}</p>
               <p><strong>Payment Method:</strong> {selectedOrder.payment_method}</p>
-              <p><strong>Points Used:</strong> {selectedOrder.points_used || 0}</p>
               <p><strong>Current Status:</strong>{' '}
                 <span className={`status-badge status-${selectedOrder.status}`}>
                   {selectedOrder.status}
@@ -117,18 +120,16 @@ const AdminOrders = () => {
             <div className="order-items">
               {selectedOrder.items?.map((item, index) => (
                 <div key={index} className="order-item">
-                  <p><strong>{item.productId?.name || 'Product'}</strong></p>
+                  <p><strong>{item.product_id?.name || item.product_name || 'Product'}</strong></p>
                   <p>Quantity: {item.quantity}</p>
-                  <p>Price: ${item.price}</p>
+                  <p>Price: ${item.price?.toFixed(2)}</p>
                   <p>Total: ${(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               ))}
             </div>
 
             <div className="order-totals">
-              <p><strong>Total Amount:</strong> ${selectedOrder.totalAmount?.toFixed(2)}</p>
-              <p><strong>Final Amount:</strong> ${selectedOrder.finalAmount?.toFixed(2)}</p>
-              <p><strong>Points Earned:</strong> {selectedOrder.points_earned || 0}</p>
+              <p><strong>Total Amount:</strong> ${selectedOrder.total_amount?.toFixed(2)}</p>
             </div>
 
             <div className="status-update">
@@ -175,10 +176,10 @@ const AdminOrders = () => {
                   {orders.map(order => (
                     <tr key={order._id}>
                       <td>{order._id.slice(-8)}</td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                      <td>{order.userId?.name || order.userId}</td>
+                      <td>{new Date(order.placed_at || order.createdAt).toLocaleDateString()}</td>
+                      <td>{order.user_id?.name || order.user_id}</td>
                       <td>{order.items?.length || 0}</td>
-                      <td>${order.finalAmount?.toFixed(2)}</td>
+                      <td>${order.total_amount?.toFixed(2)}</td>
                       <td>
                         <span className={`status-badge status-${order.status}`}>
                           {order.status}

@@ -61,6 +61,10 @@ export const vendorAPI = {
   getProfile: () => api.get('/api/vendor/me'),
   updateProfile: (data) => api.put('/api/vendor/me', data),
   getStatus: () => api.get('/api/vendor/status'),
+
+  // Statistics and Reports - uses same endpoints as admin, but returns vendor-specific data
+  getStatistics: () => api.get('/api/orders/statistics'),
+  getSalesReport: (params) => api.get('/api/orders/sales-report', { params }),
 };
 
 // Product API
@@ -103,10 +107,10 @@ export const adminAPI = {
   updateUser: (id, data) => api.put(`/api/admin/users/${id}`, data),
   deleteUser: (id) => api.delete(`/api/admin/users/${id}`),
 
-  // Orders
-  getAllOrders: (params) => api.get('/api/admin/orders', { params }),
-  getStatistics: () => api.get('/api/admin/statistics'),
-  getSalesReport: (params) => api.get('/api/admin/sales-report', { params }),
+  // Orders - uses same endpoint as regular users, but returns all orders based on role
+  getAllOrders: (params) => api.get('/api/orders', { params }),
+  getStatistics: () => api.get('/api/orders/statistics'),
+  getSalesReport: (params) => api.get('/api/orders/sales-report', { params }),
 };
 
 // Category API

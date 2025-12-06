@@ -19,10 +19,11 @@ const VendorOrders = () => {
     setError('');
 
     try {
-      // Note: This endpoint might need adjustment based on backend implementation
-      // Vendors should see orders containing their products
+      // Vendors see orders containing their products (smart routing on backend)
       const response = await orderAPI.getUserOrders({});
-      setOrders(response.data.orders || response.data);
+      // Response structure: { success, message, data: { orders, pagination } }
+      const ordersData = response.data?.data?.orders || response.data?.orders || [];
+      setOrders(ordersData);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load orders');
     } finally {
@@ -33,8 +34,10 @@ const VendorOrders = () => {
   const viewOrderDetails = async (orderId) => {
     try {
       const response = await orderAPI.getOrderDetails(orderId);
-      setSelectedOrder(response.data);
-      setNewStatus(response.data.status);
+      // Response structure: { success, message, data: orderObject }
+      const orderData = response.data?.data || response.data;
+      setSelectedOrder(orderData);
+      setNewStatus(orderData.status);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to load order details');
     }
@@ -67,8 +70,8 @@ const VendorOrders = () => {
 
             <div className="order-info">
               <p><strong>Order ID:</strong> {selectedOrder._id}</p>
-              <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-              <p><strong>Customer:</strong> {selectedOrder.userId?.name || 'N/A'}</p>
+              <p><strong>Date:</strong> {new Date(selectedOrder.placed_at || selectedOrder.createdAt).toLocaleString()}</p>
+              <p><strong>Customer:</strong> {selectedOrder.user_id?.name || 'N/A'}</p>
               <p><strong>Current Status:</strong>{' '}
                 <span className={`status-badge status-${selectedOrder.status}`}>
                   {selectedOrder.status}
@@ -80,9 +83,9 @@ const VendorOrders = () => {
             <div className="order-items">
               {selectedOrder.items?.map((item, index) => (
                 <div key={index} className="order-item">
-                  <p><strong>{item.productId?.name || 'Product'}</strong></p>
+                  <p><strong>{item.product_id?.name || item.product_name || 'Product'}</strong></p>
                   <p>Quantity: {item.quantity}</p>
-                  <p>Price: ${item.price}</p>
+                  <p>Price: ${item.price?.toFixed(2)}</p>
                 </div>
               ))}
             </div>
@@ -117,9 +120,9 @@ const VendorOrders = () => {
               {orders.map(order => (
                 <div key={order._id} className="order-card">
                   <h3>Order #{order._id.slice(-8)}</h3>
-                  <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p><strong>Date:</strong> {new Date(order.placed_at || order.createdAt).toLocaleDateString()}</p>
                   <p><strong>Items:</strong> {order.items?.length || 0}</p>
-                  <p><strong>Total:</strong> ${order.finalAmount?.toFixed(2)}</p>
+                  <p><strong>Total:</strong> ${order.total_amount?.toFixed(2)}</p>
                   <p>
                     <strong>Status:</strong>{' '}
                     <span className={`status-badge status-${order.status}`}>
