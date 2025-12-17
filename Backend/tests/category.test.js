@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("../app");
-const Category = require("../Models/CategoryModel");
+const Category = require("../Models/categoryModel");
 const mongoose = require("mongoose");
 
 const mockAdminId = new mongoose.Types.ObjectId();

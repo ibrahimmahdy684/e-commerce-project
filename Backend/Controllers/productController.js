@@ -1,4 +1,4 @@
-const Product =require("../Models/ProductModel.js"); 
+const Product =require("../Models/productModel.js"); 
 
 const productController={
 
