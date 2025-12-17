@@ -120,7 +120,7 @@ const addToCart = async (req, res, next) => {
     return ResponseHandler.success(
       res,
       { cart_id: cart._id },
-      'Item added to cart successfully'
+      'Item added to cart successfully',201
     );
   } catch (error) {
     next(error);

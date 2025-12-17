@@ -67,6 +67,7 @@ const transporter = nodemailer.createTransport({
   logger: process.env.NODE_ENV === "development",
 });
 
+if (process.env.NODE_ENV !== "test") {
 // Verify transporter configuration
 transporter.verify((error, success) => {
   if (error) {
@@ -76,7 +77,7 @@ transporter.verify((error, success) => {
     console.log("✅ Email server is ready to send messages");
   }
 });
-
+}
 /**
  * Send an email using the configured transporter
  * @param {Object} options - Email options

@@ -24,8 +24,6 @@ const cartSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-cartSchema.index({ user_id: 1 });
 
 // Method to find item in cart
 cartSchema.methods.findItem = function(productId) {

@@ -43,8 +43,7 @@ const orderSchema = new mongoose.Schema({
   timestamps: false
 });
 
-// Indexes for faster queries
-orderSchema.index({ user_id: 1 });
+
 orderSchema.index({ status: 1 });
 orderSchema.index({ placed_at: -1 });
 
