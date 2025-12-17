@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
 import { productAPI, categoryAPI } from '../../services/api';
 import Loading from '../../components/Loading';
 import ErrorDisplay from '../../components/ErrorDisplay';
@@ -56,10 +55,10 @@ const AdminProducts = () => {
 
       if (editingProduct) {
         await productAPI.update(editingProduct._id, productData);
-        toast.success('Product updated successfully');
+        alert('Product updated successfully');
       } else {
         await productAPI.create(productData);
-        toast.success('Product created successfully');
+        alert('Product created successfully');
       }
 
       setShowForm(false);
@@ -67,7 +66,7 @@ const AdminProducts = () => {
       resetForm();
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save product');
+      alert(err.response?.data?.message || 'Failed to save product');
     }
   };
 
@@ -90,10 +89,10 @@ const AdminProducts = () => {
 
     try {
       await productAPI.delete(productId);
-      toast.success('Product deleted successfully');
+      alert('Product deleted successfully');
       fetchData();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete product');
+      alert(err.response?.data?.message || 'Failed to delete product');
     }
   };
 
@@ -174,7 +173,6 @@ const AdminProducts = () => {
             </select>
           </div>
 
-          {!editingProduct && (
           <div className="form-group">
             <label>Vendor ID *</label>
             <input
@@ -185,7 +183,6 @@ const AdminProducts = () => {
               required
             />
           </div>
-          )}
 
           <div className="form-group">
             <label>Quantity *</label>
