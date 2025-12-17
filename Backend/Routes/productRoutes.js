@@ -16,8 +16,6 @@ router.post(
 // Get all products (admin gets all, vendor gets only their own)
 router.get(
   "/all",
-  protect,
-  allowRoles("admin", "vendor"),
   productController.getAllProducts
 );
 

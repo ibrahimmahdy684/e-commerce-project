@@ -96,6 +96,16 @@ const AdminProducts = () => {
     }
   };
 
+  const handleApprove = async (productId) => {
+    try {
+      await productAPI.update(productId, { status: 'approved' });
+      alert('Product approved successfully');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve product');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -249,6 +259,11 @@ const AdminProducts = () => {
                     <button onClick={() => handleEdit(product)} className="btn btn-sm btn-secondary">
                       Edit
                     </button>
+                    {product.status === 'pending' && (
+                      <button onClick={() => handleApprove(product._id)} className="btn btn-sm btn-success">
+                        Approve
+                      </button>
+                    )}
                     <button onClick={() => handleDelete(product._id)} className="btn btn-sm btn-danger">
                       Delete
                     </button>
