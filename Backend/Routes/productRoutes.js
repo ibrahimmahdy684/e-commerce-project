@@ -17,7 +17,6 @@ router.post(
 router.get(
   "/all",
   protect,
-  allowRoles("admin", "vendor"),
   productController.getAllProducts
 );
 
