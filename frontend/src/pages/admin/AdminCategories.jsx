@@ -126,7 +126,9 @@ const AdminCategories = () => {
       <div className="categories-list">
         <h3>All Categories</h3>
         {categories.length === 0 ? (
-          <p>No categories found</p>
+          <div className="no-categories">
+            <p>No categories found</p>
+          </div>
         ) : (
           <table className="data-table">
             <thead>

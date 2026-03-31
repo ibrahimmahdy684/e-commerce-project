@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -42,7 +44,8 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="app">
+      <div className="app">
+        <ToastContainer position="top-right" autoClose={3000} />
           <Navbar />
           <main className="main-content">
             <Routes>

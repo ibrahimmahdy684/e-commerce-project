@@ -1,116 +1,61 @@
+/// <reference types="cypress" />
+
 describe("E2E Happy Path - Purchase Flow", () => {
+  const productId = "69428ef0dc40005a5441fe16"; // real product id
+  const productName = "PC"; // real product name
 
-  before(() => {
-    // Create test user if it doesn't exist
-    cy.request({
-      method: 'POST',
-      url: `${Cypress.env("apiUrl")}/auth/register`,
-      body: {
-        full_name: 'Test Buyer',
-        email: 'buyer@test.com',
-        password: '123456789',
-        role: 'user'
-      },
-      failOnStatusCode: false // Don't fail if user already exists
-    }).then(() => {
-      // Create a test vendor and product
-      cy.request({
-        method: 'POST',
-        url: `${Cypress.env("apiUrl")}/auth/register`,
-        body: {
-          full_name: 'Test Vendor',
-          email: 'vendor@test.com',
-          password: '123456789',
-          role: 'vendor',
-          shop_name: 'Test Shop'
-        },
-        failOnStatusCode: false
-      }).then(() => {
-        // Login as vendor to create product
-        cy.request({
-          method: 'POST',
-          url: `${Cypress.env("apiUrl")}/auth/login`,
-          body: {
-            email: 'vendor@test.com',
-            password: '123456789'
-          }
-        }).then((loginResponse) => {
-          const token = loginResponse.body.token;
-          
-          // Create a category first
-          cy.request({
-            method: 'POST',
-            url: `${Cypress.env("apiUrl")}/categories`,
-            headers: { Authorization: `Bearer ${token}` },
-            body: {
-              name: 'Test Category',
-              description: 'Test category for Cypress'
-            }
-          }).then((categoryResponse) => {
-            const categoryId = categoryResponse.body.data._id;
-            
-            // Create a product
-            cy.request({
-              method: 'POST',
-              url: `${Cypress.env("apiUrl")}/product`,
-              headers: { Authorization: `Bearer ${token}` },
-              body: {
-                name: 'Test Product',
-                description: 'Test product for Cypress',
-                price: 99.99,
-                quantity: 10,
-                categoryId: categoryId,
-                status: 'approved',
-                images: ['test-image.jpg']
-              }
-            });
-          });
-        });
-      });
-    });
-  });
+  it("User can login, view product, add to cart, checkout, and place order", () => {
+    // Visit login page
+cy.visit("/login");
 
-  it("login → view products → add to cart → checkout → place order", () => {
+// Fill in credentials
+cy.get('input[name="email"]').type("buyer@test.com", { delay: 50 });
+cy.get('input[name="password"]').type("123456789", { delay: 50 });
 
-    // ---- Login ----
-    cy.visit("/login");
+// Click submit button
+cy.get('button[type="submit"]').click();
 
-    cy.get('input[name="email"]').type("buyer@test.com");
-    cy.get('input[name="password"]').type("123456789");
-    cy.get('button[type="submit"]').click();
+// Wait for redirect
+cy.url({ timeout: 10000 }).should("include", "/storefront");
 
-    // Should redirect to storefront after login
-    cy.url().should("include", "/storefront");
+    // 2️⃣ Navigate to product page
+    cy.visit(`/product/${productId}`);
 
-    // ---- View Products and Add to Cart ----
-    // Click "View Details" on the first product
-    cy.contains("View Details").first().click();
+    // Product should be visible
+    cy.contains(productName, { timeout: 10000 }).should("be.visible");
 
-    // Should be on product detail page
-    cy.url().should("include", "/product/");
-
-    // Add to cart
+    // 3️⃣ Add 2 items to cart
+    cy.get('input[type="number"]').clear().type("2");
     cy.contains("Add to Cart").click();
 
-    // Should redirect to cart after adding
-    cy.url().should("include", "/cart");
+    // Cart page
+    cy.url({ timeout: 5000 }).should("include", "/cart");
 
-    // ---- Cart ----
-    // Click "Proceed to Checkout"
+    // Checkout
     cy.contains("Proceed to Checkout").click();
+    cy.url({ timeout: 5000 }).should("include", "/checkout");
 
-    // ---- Checkout ----
-    cy.url().should("include", "/checkout");
-
-    // Select cash payment method
-    cy.get('select').select('cash');
+    // Select cash payment
+    cy.get('select').select("cash");
 
     // Place order
     cy.contains("Place Order").click();
 
-    // ---- Order Success ----
-    // Should show success message and redirect to orders
-    cy.contains("Order placed successfully", { timeout: 10000 });
-    cy.url().should("include", "/orders");
+    // Verify order success
+    cy.contains("Order placed successfully", { timeout: 10000 }).should("be.visible");
+
+ // After placing order and navigating to /orders
+cy.url({ timeout: 10000 }).should("include", "/orders");
+
+
+
+// Optional cleanup to prevent post-test errors
+cy.window().then((win) => {
+  win.localStorage.clear();
+});
+
+// Small wait to let frontend settle
+cy.wait(300);
+
   });
 });

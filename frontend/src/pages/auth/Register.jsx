@@ -40,7 +40,12 @@ const Register = () => {
     setLoading(false);
 
     if (result.success) {
-      navigate('/verify-otp', { state: { email: formData.email } });
+      if (result.isVerified) {
+        // In test mode, user is auto-verified, go to login
+        navigate('/login', { state: { message: 'Account created successfully! Please login.' } });
+      } else {
+        navigate('/verify-otp', { state: { email: formData.email } });
+      }
     } else {
       setError(result.message);
     }
